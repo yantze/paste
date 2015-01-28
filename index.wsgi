@@ -12,8 +12,10 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 import pygments.lexers
 
+from parse import ParseHtml
+
 bucket = Bucket('paste')
-prefix = time.strftime("%Y%m/")
+prefix = time.strftime("%Y%m")
 LENID = 4
 
 URL = 'http://paste.sinaapp.com'
@@ -46,19 +48,22 @@ def help():
 
     在网页中:
         在网页后面添加<a href='{3}'>?&lt;lang&gt;</a>代码高亮和行数
-        用这个<a href='{2}'>链接</a>直接从浏览器复制到网站中
+        用这个<a href='{2}'>[链接]</a>直接从浏览器复制到网站中
 
     例子:
+        点击上面的链接，可获得类似这里的链接<a href='{1}/eRaH?cpp#n-7'>{1}/eRaH?cpp#n-7</a>
         ~$ cat bin/ching | curl -F '{0}=&lt;-' {1}
            {1}/aXZI
         ~$ firefox {1}/aXZI?py#n-7
 
     项目说明:
         暂时只能放文字
+        自然月前的内容,使用长id:{1}/{4}eRaH
         网站模仿自:http://sprunge.us
-        项目地址:  http://github.com/yantze/paste
+        项目地址:http://github.com/yantze/paste
+        联系：yantze@126.com
     </pre>
-    '''.format(POST, URL, form, 'http://pygments.org/docs/lexers/')
+    '''.format(POST, URL, form, prefix)
 
 def put_blob(data):
     nid = new_id()
@@ -70,7 +75,7 @@ def put_blob(data):
     return key
 
 def dectect_unique_key(nid):
-    key = 'sae{0}{1}'.format(prefix, nid)
+    key = 'sae{0}/{1}'.format(prefix, nid)
     # the except dectect the unique key
     try:
         bucket.stat_object(key)
@@ -78,15 +83,6 @@ def dectect_unique_key(nid):
     except Exception as ex:
         return key
 
-# todo for archive
-class ArchiveHandler():
-    def GET(self):
-        # date = web.input().get('date')
-        # if not date:
-        #     key = "sae{0}{1}".format(prefix, id)
-        # else:
-        #     key = "sae{0}{1}".format(date, id)
-        return key
 
 class MainHandler():
     def GET(self):
@@ -112,7 +108,10 @@ class MainHandler():
 class ServeHandler():
 
     def GET(self, id):
-        key = "sae{0}{1}".format(prefix, id)
+        if len(id)>=9:
+            key = "sae{0}/{1}".format(id[:6],id[6:])
+        else:
+            key = "sae{0}/{1}".format(prefix, id)
 
         try:
             data = bucket.get_object_contents(key)
@@ -165,3 +164,6 @@ urls = (
 # entries
 app = web.application(urls, globals()).wsgifunc()
 application = sae.create_wsgi_app(app)
+
+# sae inter py shell
+# http://shellpy.sinaapp.com/
