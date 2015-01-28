@@ -12,8 +12,6 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 import pygments.lexers
 
-from parse import ParseHtml
-
 bucket = Bucket('paste')
 prefix = time.strftime("%Y%m")
 LENID = 4
@@ -33,32 +31,31 @@ def new_id():
 
 def help():
     form = '''
-        data:text/html,<form action="{0}" method="POST" accept-charset="UTF-8">
+        data:text/html,<form action="{0}/qr/" method="POST" accept-charset="UTF-8">
         <textarea name="{1}" cols="80" rows="24"></textarea>
-        <br><button type="submit">{1}</button></form>'''.format(URL, POST)
+        <br><button type="submit">generate url&qrcode</button></form>'''.format(URL, POST)
 
     return '''
     <style> a {{ text-decoration: none }} </style>
     <pre>
 
     PASTE
+        放文字和代码的地方
 
     在命令行中:
         &lt;command&gt; | curl -F '{0}=&lt;-' {1}
 
     在网页中:
-        在网页后面添加<a href='{3}'>?&lt;lang&gt;</a>代码高亮和行数
-        用这个<a href='{2}'>[链接]</a>直接从浏览器复制到网站中
+        在网页后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
+        用这个<a href='{2}'>[链接]</a>直接从浏览器提交文字或者代码到网站中
 
     例子:
-        点击上面的链接，可获得类似这里的链接<a href='{1}/eRaH?cpp#n-7'>{1}/eRaH?cpp#n-7</a>
+        提交到网站后，可获得类似这里的链接{1}/eRaH?cpp#n-7
         ~$ cat bin/ching | curl -F '{0}=&lt;-' {1}
            {1}/aXZI
-        ~$ firefox {1}/aXZI?py#n-7
 
     项目说明:
-        暂时只能放文字
-        自然月前的内容,使用长id:{1}/{4}eRaH
+        自然月前的内容,使用长id:{1}/{3}eRaH
         网站模仿自:http://sprunge.us
         项目地址:http://github.com/yantze/paste
         联系：yantze@126.com
@@ -83,16 +80,36 @@ def dectect_unique_key(nid):
     except Exception as ex:
         return key
 
+class QrHandler():
+    qrurl = 'http://chart.apis.google.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl='
+
+    def GET(self, id):
+        if not id:
+            return "not known"
+        img = '<img src="{0}{1}/{2}"></img>'.format(self.qrurl, URL, id)
+        return '''
+        <html>
+        <meta charset="utf-8">
+        <body>
+        {0}<br/>
+        生成的链接:<br/>
+        {1}/{2}
+        </body>
+        </html>'''.format(img, URL, id)
+
+    def POST(self):
+        return "hahah"
+        # url = MainHandler().POST()
+        # return '<img src="{0}{1}"></img><br/>{1}'.format(qrurl, url)
+
 
 class MainHandler():
     def GET(self):
-        return '''
-        <html>
+        return '''<html>
+        <meta charset="utf-8">
         <body>
         {0}
-        </body>
-        </html>
-        '''.format(help())
+        </body></html>'''.format(help())
 
     def POST(self):
         nid = new_id()
@@ -134,7 +151,6 @@ class ServeHandler():
 
     def html(self, data, lang):
         web.header("Content-Type","text/html; charset=utf-8")
-        web.header("viewport","initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width")
         self.data = data
         self.lang = lang
 
@@ -158,6 +174,7 @@ class ServeHandler():
 
 urls = (
         '/',MainHandler,
+        '/qr/([^/]+)?', QrHandler,
         '/([^/]+)?', ServeHandler,
         )
 
