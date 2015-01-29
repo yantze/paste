@@ -1,7 +1,9 @@
 body {
     margin: 10px;
     color: rgb(230, 221, 221);
-    font: 1.6em/1.9 "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, HiraginoSansGB, sans-serif;
+    font-size: 20px;
+    line-height: 20px;
+    font: "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, HiraginoSansGB, sans-serif;
     filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr='#50812B',endColorStr='#55777A',gradientType='0');
     background: -moz-linear-gradient(top, #50812B, #55777A);
     background: -o-linear-gradient(top,#50812B, #55777A);
