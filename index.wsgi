@@ -16,6 +16,7 @@ bucket = Bucket('paste')
 prefix = time.strftime("%Y%m")
 LENID = 4
 
+qrurl = 'http://chart.apis.google.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl='
 URL = 'http://paste.sinaapp.com'
 POST = 'p'
 
@@ -31,8 +32,8 @@ def new_id():
 
 def help():
     form = '''
-        data:text/html,<form action="{0}/qr/" method="POST" accept-charset="UTF-8">
-        <textarea name="{1}" cols="80" rows="24"></textarea>
+        data:text/html,<form action="{0}" method="POST" accept-charset="UTF-8">
+        <textarea name="{1}" cols="80" rows="24"></textarea><input type="hidden" name="qr" value="yes" />
         <br><button type="submit">generate url&qrcode</button></form>'''.format(URL, POST)
 
     return '''
@@ -46,8 +47,9 @@ def help():
         &lt;command&gt; | curl -F '{0}=&lt;-' {1}
 
     在网页中:
-        在网页后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
-        用这个<a href='{2}'>[链接]</a>直接从浏览器提交文字或者代码到网站中
+        用这个<a href='{2}'>[点我粘贴]</a>直接从浏览器提交文字或者代码到网站中
+        在网址后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
+        在网址后面添加?text，可以友好的显示text文档
 
     例子:
         提交到网站后，可获得类似这里的链接{1}/eRaH?cpp#n-7
@@ -80,30 +82,9 @@ def dectect_unique_key(nid):
     except Exception as ex:
         return key
 
-class QrHandler():
-    qrurl = 'http://chart.apis.google.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl='
-
-    def GET(self, id):
-        if not id:
-            return "not known"
-        img = '<img src="{0}{1}/{2}"></img>'.format(self.qrurl, URL, id)
-        return '''
-        <html>
-        <meta charset="utf-8">
-        <body>
-        {0}<br/>
-        生成的链接:<br/>
-        {1}/{2}
-        </body>
-        </html>'''.format(img, URL, id)
-
-    def POST(self):
-        return "hahah"
-        # url = MainHandler().POST()
-        # return '<img src="{0}{1}"></img><br/>{1}'.format(qrurl, url)
-
 
 class MainHandler():
+
     def GET(self):
         return '''<html>
         <meta charset="utf-8">
@@ -115,11 +96,27 @@ class MainHandler():
         nid = new_id()
         form = web.input()
         data = form.get(POST)
-        try:
+        qrcode = form.get('qr')
+
+        if data:
             key = put_blob(data)
-        except Exception as ex:
-            return ex
-        return '{0}/{1}'.format(URL, key[-LENID:])
+        else:
+            return "not known"
+
+        genURL = '{0}/{1}'.format(URL, key[-LENID:])
+        if qrcode:
+            img = '<img src="{0}{1}"></img>'.format(qrurl, genURL)
+            return '''
+            <html>
+            <meta charset="utf-8">
+            <body>
+            {0}<br/>
+            生成的链接:<br/>
+            {1}
+            </body>
+            </html>'''.format(img, genURL)
+        else:
+            return genURL
 
 
 class ServeHandler():
@@ -138,21 +135,38 @@ class ServeHandler():
 
         param = web.input().keys()
         # param[0] is language
-        if param:
-            return self.html(data, param[0])
-        else:
+        if not param:
             return self.plain(data)
+        elif param[0] == 'text':
+            return '''
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>{0}</title>
+        <link rel="stylesheet" href="static/css/{1}.css" type="text/css" media="all" />
+    </head>
+    <body>
+    <pre>{2}</pre>
+    </body>
+</html>
+'''.format(URL, param[0], self.html(data))
+        else:
+            return self.html(data, param[0])
         # resource = str(urllib.unquoto(resource))
 
     def plain(self, data):
         web.header("Content-Type","text/plain; charset=utf-8")
-        self.data = data
-        return self.data
+        return data
 
-    def html(self, data, lang):
+    def html(self, data):
         web.header("Content-Type","text/html; charset=utf-8")
-        self.data = data
-        self.lang = lang
+        return data
+
+
+    def syntax(self, data, lang):
+        web.header("Content-Type","text/html; charset=utf-8")
 
         try:
             lexer = pygments.lexers.get_lexer_by_name(lang)
@@ -160,7 +174,7 @@ class ServeHandler():
             lexer = pygments.lexers.TextLexer()
 
         hl = highlight(
-            self.data,
+            data,
             lexer,
             HtmlFormatter(
                 full=True,
@@ -174,7 +188,6 @@ class ServeHandler():
 
 urls = (
         '/',MainHandler,
-        '/qr/([^/]+)?', QrHandler,
         '/([^/]+)?', ServeHandler,
         )
 
