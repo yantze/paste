@@ -170,7 +170,7 @@ class ServeHandler():
 
     def markdown(self, data):
         web.header("Content-Type","text/html; charset=utf-8")
-        return markdown.markdown(data)
+        return markdown.markdown(unicode(data, 'utf8'))
 
 
     def syntax(self, data, lang):
