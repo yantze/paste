@@ -4,6 +4,7 @@ import random
 
 # web.py
 import web
+import markdown
 
 import sae
 from sae.storage import Bucket
@@ -16,7 +17,9 @@ bucket = Bucket('paste')
 prefix = time.strftime("%Y%m")
 LENID = 4
 
-qrurl = 'http://chart.apis.google.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl='
+# qrurl = 'http://chart.apis.google.com/chart?chs=240x240&cht=qr&choe=UTF-8&chl='
+# qrurl = 'http://chart.lanbing.org/chart?&cht=qr&chld=|1&chs=240x240&chl='
+qrurl = 'http://tool.oschina.net/action/qrcode/generate?output=image%2Fpng&error=Q&type=0&margin=3&size=4&data='
 URL = 'http://paste.sinaapp.com'
 POST = 'p'
 
@@ -32,9 +35,9 @@ def new_id():
 
 def help():
     form = '''
-        data:text/html,<form action="{0}" method="POST" accept-charset="UTF-8">
+        <form action="{0}" method="POST" accept-charset="UTF-8">
         <textarea name="{1}" cols="80" rows="24"></textarea><input type="hidden" name="qr" value="yes" />
-        <br><button type="submit">generate url&qrcode</button></form>'''.format(URL, POST)
+        <br><button type="submit">生成链接和二维码</button></form>'''.format(URL, POST)
 
     return '''
     <style> a {{ text-decoration: none }} </style>
@@ -47,9 +50,8 @@ def help():
         &lt;command&gt; | curl -F '{0}=&lt;-' {1}
 
     在网页中:
-        用这个<a href='{2}'>[点我粘贴]</a>直接从浏览器提交文字或者代码到网站中
-        在网址后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
         在网址后面添加?text，可以友好的显示text文档
+        在网址后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
 
     例子:
         提交到网站后，可获得类似这里的链接{1}/eRaH?cpp#n-7
@@ -61,7 +63,7 @@ def help():
         网站模仿自:http://sprunge.us
         项目地址:http://github.com/yantze/paste
         联系：yantze@126.com
-    </pre>
+    </pre><br/>{2}
     '''.format(POST, URL, form, prefix)
 
 def put_blob(data):
@@ -101,9 +103,9 @@ class MainHandler():
         if data:
             key = put_blob(data)
         else:
-            return "not known"
+            return "no data"
 
-        genURL = '{0}/{1}'.format(URL, key[-LENID:])
+        genURL = '{0}/{1}{2}'.format(URL, prefix, key[-LENID:])
         if qrcode:
             img = '<img src="{0}{1}"></img>'.format(qrurl, genURL)
             return '''
@@ -137,6 +139,8 @@ class ServeHandler():
         # param[0] is language
         if not param:
             return self.plain(data)
+        elif param[0] == 'md':
+            return self.markdown(data)
         elif param[0] == 'text':
             return '''
 <!DOCTYPE html>
@@ -163,6 +167,10 @@ class ServeHandler():
     def html(self, data):
         web.header("Content-Type","text/html; charset=utf-8")
         return data
+
+    def markdown(self, data):
+        web.header("Content-Type","text/html; charset=utf-8")
+        return markdown.markdown(data)
 
 
     def syntax(self, data, lang):
