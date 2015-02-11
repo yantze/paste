@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import time
 import random
 
@@ -34,13 +36,17 @@ def new_id():
     return nid
 
 def help():
+    #  document.getElementsByTagName("textarea").item().setAttribute("rows", 34)
+    # j cdn : http://code.jquery.com/jquery-1.11.2.min.js
     form = '''
         <form action="{0}" method="POST" accept-charset="UTF-8">
-        <textarea name="{1}" cols="80" rows="24"></textarea><input type="hidden" name="qr" value="yes" />
-        <br><button type="submit">生成链接和二维码</button></form>'''.format(URL, POST)
+        <button type="submit">生成链接和二维码</button><br>
+        <textarea name="{1}" cols="80" rows="3" onclick='document.getElementsByTagName("textarea")[0].setAttribute("rows", 34)'></textarea><input type="hidden" name="qr" value="yes" />
+        </form>'''.format(URL, POST)
 
     return '''
     <style> a {{ text-decoration: none }} </style>
+{2}
     <pre>
 
     PASTE
@@ -50,20 +56,22 @@ def help():
         &lt;command&gt; | curl -F '{0}=&lt;-' {1}
 
     在网页中:
-        在网址后面添加?text，可以友好的显示text文档
-        在网址后面添加<a href='{1}/eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
+        原文:<a href='{1}/201502aVfY'>{1}/aVfY</a>
+        TEXT渲染:<a href='{1}/201502aVfY?text'>{1}/aVfY?text</a>
+        markdown渲染:<a href='{1}/201502aVfY?md'>{1}/aVfY?md</a>
+        网址后面添加<a href='{1}/201501eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
 
     例子:
         提交到网站后，可获得类似这里的链接{1}/eRaH?cpp#n-7
-        ~$ cat bin/ching | curl -F '{0}=&lt;-' {1}
-           {1}/aXZI
+        $ cat bin/ching | curl -F '{0}=&lt;-' {1}
 
     项目说明:
-        自然月前的内容,使用长id:{1}/{3}eRaH
+        自然月前的内容,使用长id:{1}/201501eRaH
+        eg.URL/201502aVfY, URL/aVfY ,都可以
         网站模仿自:http://sprunge.us
         项目地址:http://github.com/yantze/paste
         联系：yantze@126.com
-    </pre><br/>{2}
+    </pre>
     '''.format(POST, URL, form, prefix)
 
 def put_blob(data):
@@ -140,7 +148,26 @@ class ServeHandler():
         if not param:
             return self.plain(data)
         elif param[0] == 'md':
-            return self.markdown(data)
+            try:
+                md = u'''
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>{0}</title>
+        <link rel="stylesheet" href="static/css/{1}.css" type="text/css" media="all" />
+    </head>
+    <body>
+        <article class="markdown-body">
+        {2}
+        </article>
+    </body>
+</html>
+'''.format(URL, param[0], self.markdown(data))
+            except Exception as ex:
+                return ex
+            return md
         elif param[0] == 'text':
             return '''
 <!DOCTYPE html>
@@ -157,7 +184,7 @@ class ServeHandler():
 </html>
 '''.format(URL, param[0], self.html(data))
         else:
-            return self.html(data, param[0])
+            return self.syntax(data, param[0])
         # resource = str(urllib.unquoto(resource))
 
     def plain(self, data):
@@ -170,7 +197,24 @@ class ServeHandler():
 
     def markdown(self, data):
         web.header("Content-Type","text/html; charset=utf-8")
-        return markdown.markdown(unicode(data, 'utf8'))
+        return markdown.markdown(unicode(data, 'utf8'),
+            extensions=[
+                'markdown.extensions.extra',
+                'markdown.extensions.abbr',
+                'markdown.extensions.attr_list',
+                'markdown.extensions.def_list',
+                'markdown.extensions.fenced_code',
+                'markdown.extensions.footnotes',
+                'markdown.extensions.tables',
+                'markdown.extensions.smart_strong',
+                'markdown.extensions.codehilite',
+                'markdown.extensions.meta',
+                'markdown.extensions.nl2br',
+                'markdown.extensions.sane_lists',
+                'markdown.extensions.smarty',
+                'markdown.extensions.toc'
+            ]
+        )
 
 
     def syntax(self, data, lang):
