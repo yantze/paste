@@ -56,19 +56,18 @@ def help():
         &lt;command&gt; | curl -F '{0}=&lt;-' {1}
 
     在网页中:
-        原文:<a href='{1}/201502aVfY'>{1}/aVfY</a>
+        在上方的方框中粘贴文字,然后提交即可
+
+    结果演示:
+        提交后的连接:<a href='{1}/201502aVfY'>{1}/aVfY</a>
         TEXT渲染:<a href='{1}/201502aVfY?text'>{1}/aVfY?text</a>
         markdown渲染:<a href='{1}/201502aVfY?md'>{1}/aVfY?md</a>
         网址后面添加<a href='{1}/201501eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
 
-    例子:
-        提交到网站后，可获得类似这里的链接{1}/eRaH?cpp#n-7
-        $ cat bin/ching | curl -F '{0}=&lt;-' {1}
-
     项目说明:
         自然月前的内容,使用长id:{1}/201501eRaH
         eg.URL/201502aVfY, URL/aVfY ,都可以
-        网站模仿自:http://sprunge.us
+        网站灵感来自:http://sprunge.us
         项目地址:http://github.com/yantze/paste
         联系：yantze@126.com
     </pre>
@@ -116,15 +115,26 @@ class MainHandler():
         genURL = '{0}/{1}{2}'.format(URL, prefix, key[-LENID:])
         if qrcode:
             img = '<img src="{0}{1}"></img>'.format(qrurl, genURL)
+            img_text = '<img src="{0}{1}?text"></img>'.format(qrurl, genURL)
+            img_markdown = '<img src="{0}{1}?md"></img>'.format(qrurl, genURL)
             return '''
             <html>
             <meta charset="utf-8">
             <body>
-            {0}<br/>
+            原始内容:<br/>
+            {1}<br/>
             生成的链接:<br/>
-            {1}
+            <a href="{0}">{0}</a><br/><br/>
+            text渲染:<br/>
+            {2}<br/>
+            生成的链接:<br/>
+            <a href="{0}?text">{0}?text</a><br/><br/>
+            markdown渲染:<br/>
+            {3}<br/>
+            生成的链接:<br/>
+            <a href="{0}?md">{0}?md</a>
             </body>
-            </html>'''.format(img, genURL)
+            </html>'''.format(genURL, img, img_text, img_markdown)
         else:
             return genURL
 
