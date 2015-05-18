@@ -29,9 +29,9 @@ count = 1
 
 def new_id():
     nid = ''
-    symbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     while len(nid) < LENID:
-        n = random.randint(0, 35)
+        n = random.randint(0, len(symbols))
         nid = nid + symbols[n:n+1]
     return nid
 
@@ -59,17 +59,15 @@ def help():
         在上方的方框中粘贴文字,然后提交即可
 
     结果演示:
-        提交后的连接:<a href='{1}/201502aVfY'>{1}/aVfY</a>
-        TEXT渲染:<a href='{1}/201502aVfY?text'>{1}/aVfY?text</a>
+        提交后的内容:<a href='{1}/201502aVfY'>{1}/aVfY</a>
+        优化显示:<a href='{1}/201502aVfY?text'>{1}/aVfY?text</a>
         markdown渲染:<a href='{1}/201502aVfY?md'>{1}/aVfY?md</a>
-        网址后面添加<a href='{1}/201501eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
+        在网址后面添加<a href='{1}/201501eRaH?cpp#n-7'>?&lt;lang&gt;</a>支持代码高亮和行数
 
     项目说明:
-        自然月前的内容,使用长id:{1}/201501eRaH
-        eg.URL/201502aVfY, URL/aVfY ,都可以
-        网站灵感来自:http://sprunge.us
-        项目地址:http://github.com/yantze/paste
-        联系：yantze@126.com
+        自然月前,使用长id:{1}/201501eRaH
+        当月,可以使用短id:{1}/aVfY
+        <a href='https://github.com/yantze/paste'>项目地址</a> | 联系：yantze@126.com
     </pre>
     '''.format(POST, URL, form, prefix)
 
@@ -146,6 +144,9 @@ class ServeHandler():
             key = "sae{0}/{1}".format(id[:6],id[6:])
         else:
             key = "sae{0}/{1}".format(prefix, id)
+
+        if id == u'p':
+            return 'curl -F \'p=<-\' {0}'.format(URL)
 
         try:
             data = bucket.get_object_contents(key)
