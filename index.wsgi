@@ -94,10 +94,11 @@ class MainHandler():
 
     def GET(self):
         return '''<html>
-        <meta charset="utf-8">
-        <body>
+    <meta charset="utf-8">
+    <body>
         {0}
-        </body></html>'''.format(help())
+    </body>
+</html>'''.format(help())
 
     def POST(self):
         nid = new_id()
