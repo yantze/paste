@@ -1,6 +1,6 @@
 # 一个简单的快速保存文字的网站
 
-demo:
+网站:
 http://paste.sinaapp.com
 
 ## 功能
@@ -14,15 +14,17 @@ http://paste.sinaapp.com
 ## 感谢
 网站灵感和部分代码来自:sprunge.us
 
-## 应用
+## 便捷方式
 上传文件内容，然后根据id自动下载文件内容
+```
 上传程序:
 https://github.com/yantze/dotfiles/blob/master/bin/upaste
 下载程序:
 https://github.com/yantze/dotfiles/blob/master/bin/dpaste
+```
 
 例如:
 ```bash
 upaste filename.c  # return xRqH
-dpaste xRqH  # return filename.c content
+dpaste xRqH  # return filename.c's content
 ```
